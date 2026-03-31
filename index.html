@@ -7,95 +7,74 @@
     
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+
     <style>
-        body { background: #0b0e14; color: #c9d1d9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding-top: 30px; }
-        .card-custom { background: #161b22; border: 1px solid #30363d; border-radius: 15px; padding: 20px; margin-bottom: 20px; transition: 0.3s; }
+        body { background: #0d1117; color: #e6edf3; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card-custom { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px; margin-bottom: 20px; transition: 0.3s; }
         .card-custom:hover { border-color: #58a6ff; }
-        .value-text { font-size: 2.8rem; font-weight: 800; color: #58a6ff; }
-        .unit { font-size: 1rem; color: #8b949e; }
-        .chart-container { position: relative; height: 250px; width: 100%; }
-        iframe { border-radius: 10px; border: 1px solid #30363d; width: 100%; height: 450px; background: white; }
+        .value-text { font-size: 2.8rem; font-weight: bold; color: #58a6ff; }
+        .unit { font-size: 1.2rem; color: #8b949e; }
         .status-badge { font-size: 0.9rem; padding: 5px 12px; border-radius: 20px; }
+        .chart-container { position: relative; height: 300px; width: 100%; }
+        iframe { width: 100%; height: 450px; border-radius: 8px; border: 1px solid #30363d; }
+        .table-dark { background-color: #161b22 !important; }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div class="container py-4">
     <div class="text-center mb-4">
-        <h1 class="fw-bold text-primary">SMART IOT MONITORING - FAIZ PROJECT</h1>
-        <div class="d-flex justify-content-center align-items-center gap-3">
-            <span>Logging Status: <span id="log-status" class="status-badge bg-secondary">WAITING</span></span>
-            <span>Update Terakhir: <span id="last-update" class="text-info">--:--:--</span></span>
+        <h1 class="fw-bold text-primary">SMART IOT MONITORING</h1>
+        <h5 class="text-secondary">FAIZ PROJECT</h5>
+        <div class="mt-2">
+            Status Logging: <span id="log-status" class="badge bg-secondary">LOADING...</span>
         </div>
     </div>
 
     <div class="row text-center">
         <div class="col-md-4">
             <div class="card-custom">
-                <div class="text-secondary small fw-bold">TEMPERATURE</div>
+                <div class="text-uppercase small fw-bold text-secondary">Temperature</div>
                 <div class="value-text"><span id="temp">0</span><span class="unit">°C</span></div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="card-custom">
-                <div class="text-secondary small fw-bold">HUMIDITY</div>
+                <div class="text-uppercase small fw-bold text-secondary">Humidity</div>
                 <div class="value-text"><span id="hum">0</span><span class="unit">%</span></div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="card-custom">
-                <div class="text-secondary small fw-bold">GAS LEVEL (MQ5)</div>
-                <div id="gas-type" class="fw-bold text-warning mb-1">Checking...</div>
-                <div class="value-text"><span id="gas-val">0</span><span class="unit"> PPM</span></div>
-                <div id="gas-alert" class="status-badge bg-success mt-2 d-inline-block">AMAN</div>
+                <div class="text-uppercase small fw-bold text-secondary">Gas Detector (MQ5)</div>
+                <div class="value-text" id="gas-val">0</div>
+                <div id="gas-label" class="fw-bold text-warning mb-2 small">Analysing...</div>
+                <span id="gas-status" class="status-badge bg-secondary text-white">WAITING</span>
             </div>
         </div>
     </div>
 
     <div class="row">
         <div class="col-md-4">
-            <div class="card-custom h-100">
-                <h5 class="border-bottom pb-2">System Control</h5>
-                <div class="mt-3">
-                    <button class="btn btn-success w-100 mb-2 py-2 fw-bold" onclick="setControl('start')">▶ START LOGGING</button>
-                    <button class="btn btn-danger w-100 mb-2 py-2 fw-bold" onclick="setControl('stop')">■ STOP LOGGING</button>
-                    <button class="btn btn-outline-warning w-100 mb-4 fw-bold" onclick="resetLog()">RESET LOCAL TABLE</button>
-                </div>
-                <label class="small fw-bold">Setting Interval (Detik):</label>
-                <div class="input-group">
-                    <input type="number" id="intInput" class="form-control bg-dark text-white border-secondary" placeholder="Contoh: 5">
-                    <button class="btn btn-primary px-4" onclick="updateInterval()">SET</button>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-8">
             <div class="card-custom">
-                <h5>Real-time Analytics (T & H)</h5>
-                <div class="chart-container"><canvas id="thChart"></canvas></div>
+                <h5 class="mb-3">System Control</h5>
+                <button class="btn btn-success w-100 mb-2 fw-bold" onclick="updateControl('start')">START LOGGING</button>
+                <button class="btn btn-danger w-100 mb-3 fw-bold" onclick="updateControl('stop')">STOP LOGGING</button>
+                
+                <label class="small fw-bold mb-1">Update Interval (Detik):</label>
+                <div class="input-group mb-3">
+                    <input type="number" id="inputInterval" class="form-control bg-dark text-white border-secondary" placeholder="Contoh: 5">
+                    <button class="btn btn-primary" onclick="setIntervalFirebase()">SET</button>
+                </div>
+                <p class="small text-muted text-center">Interval saat ini: <span id="current-interval" class="text-white">--</span> detik</p>
             </div>
-            <div class="card-custom">
-                <h5>Gas Analytics (MQ5)</h5>
-                <div class="chart-container"><canvas id="gasChart"></canvas></div>
-            </div>
-        </div>
-    </div>
 
-    <div class="row">
-        <div class="col-md-7">
             <div class="card-custom">
-                <h5>Cloud Spreadsheet View (History)</h5>
-                <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQPb6Laeb5cq3hZ79xQ1W0ATit3EGmjQmEtTyqYaW35Y5HmZAMLaYJQ6wGq6fShBOXLFNAZgwEOafO5/pubhtml?widget=true&amp;headers=false"></iframe>
-            </div>
-        </div>
-        <div class="col-md-5">
-            <div class="card-custom">
-                <h5>Local Real-time Log (10 Data)</h5>
-                <div style="max-height: 400px; overflow-y: auto;">
-                    <table class="table table-dark table-hover table-sm text-center">
+                <h5 class="mb-3">Local History (Real-time)</h5>
+                <div style="max-height: 250px; overflow-y: auto;">
+                    <table class="table table-dark table-hover table-sm small text-center">
                         <thead>
                             <tr>
                                 <th>Waktu</th>
@@ -104,119 +83,156 @@
                                 <th>Gas</th>
                             </tr>
                         </thead>
-                        <tbody id="historyBody"></tbody>
+                        <tbody id="tableBody">
+                            </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card-custom">
+                <h5>Grafik Suhu & Kelembapan</h5>
+                <div class="chart-container"><canvas id="chartTH"></canvas></div>
+            </div>
+            <div class="card-custom">
+                <h5>Grafik Kadar Gas (MQ5)</h5>
+                <div class="chart-container"><canvas id="chartGas"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card-custom">
+                <h5 class="mb-3">Cloud Spreadsheet History (Database Utama)</h5>
+                <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQPb6Laeb5cq3hZ79xQ1W0ATit3EGmjQmEtTyqYaW35Y5HmZAMLaYJQ6wGq6fShBOXLFNAZgwEOafO5/pubhtml?widget=true&amp;headers=false"></iframe>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    // 1. CONFIG FIREBASE
-    const firebaseConfig = { databaseURL: "https://monitoring-iot-20edf-default-rtdb.asia-southeast1.firebasedatabase.app" };
+    // 1. KONFIGURASI FIREBASE (Sesuai info kamu)
+    const firebaseConfig = {
+        databaseURL: "https://monitoring-iot-20edf-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 2. CHART CONFIG (DIPISAH)
-    const ctxTH = document.getElementById('thChart').getContext('2d');
-    const ctxGas = document.getElementById('gasChart').getContext('2d');
-
-    const chartOptions = { 
-        responsive: true, 
-        maintainAspectRatio: false,
-        scales: { x: { ticks: { color: '#8b949e' } }, y: { ticks: { color: '#8b949e' } } }
-    };
-
-    let thChart = new Chart(ctxTH, {
+    // 2. INISIALISASI GRAFIK
+    const ctxTH = document.getElementById('chartTH').getContext('2d');
+    const chartTH = new Chart(ctxTH, {
         type: 'line',
-        data: { labels: [], datasets: [
-            { label: 'Suhu (°C)', borderColor: '#ff5f6d', data: [], tension: 0.3, fill: false },
-            { label: 'Lembap (%)', borderColor: '#00f2fe', data: [], tension: 0.3, fill: false }
-        ]},
-        options: chartOptions
+        data: {
+            labels: [],
+            datasets: [
+                { label: 'Temp (°C)', borderColor: '#ff5f6d', data: [], tension: 0.3, fill: false },
+                { label: 'Hum (%)', borderColor: '#00f2fe', data: [], tension: 0.3, fill: false }
+            ]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
     });
 
-    let gasChart = new Chart(ctxGas, {
+    const ctxGas = document.getElementById('chartGas').getContext('2d');
+    const chartGas = new Chart(ctxGas, {
         type: 'line',
-        data: { labels: [], datasets: [
-            { label: 'Gas (PPM)', borderColor: '#f9d423', data: [], tension: 0.3, backgroundColor: 'rgba(249, 212, 35, 0.1)', fill: true }
-        ]},
-        options: chartOptions
+        data: {
+            labels: [],
+            datasets: [{ label: 'Gas Level', borderColor: '#f9d423', data: [], tension: 0.3, backgroundColor: 'rgba(249, 212, 35, 0.1)', fill: true }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
     });
 
-    // 3. READ REALTIME DATA
-    db.ref("monitoring").on("value", (snap) => {
-        const d = snap.val();
-        if(d) {
-            // Update UI
-            document.getElementById("temp").innerText = d.suhu;
-            document.getElementById("hum").innerText = d.kelembapan;
-            document.getElementById("gas-val").innerText = d.gas;
-            
-            // Logika Status Gas
-            let gasStatus = "AMAN";
-            let gasColor = "bg-success";
-            let gasType = "Udara Bersih";
+    // 3. BACA DATA DARI FIREBASE (REALTIME)
+    db.ref("monitoring").on("value", (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            // Update Angka
+            document.getElementById("temp").innerText = data.suhu || 0;
+            document.getElementById("hum").innerText = data.kelembapan || 0;
+            document.getElementById("gas-val").innerText = data.gas || 0;
+            document.getElementById("current-interval").innerText = data.interval || 0;
 
-            if(d.gas > 400) { 
-                gasStatus = "BAHAYA!"; 
-                gasColor = "bg-danger"; 
-                gasType = "LPG / Asap Terdeteksi"; 
+            // Update Label Status Logging
+            const logStatus = document.getElementById("log-status");
+            logStatus.innerText = (data.control || "STOP").toUpperCase();
+            logStatus.className = data.control === "start" ? "badge bg-success" : "badge bg-danger";
+
+            // Logika Analisis Gas
+            const gVal = data.gas;
+            let gLabel = "Udara Bersih";
+            let gStatus = "AMAN";
+            let gClass = "bg-success";
+
+            if (gVal > 300 && gVal < 600) {
+                gLabel = "Terdeteksi Asap Ringan";
+                gStatus = "WASPADA";
+                gClass = "bg-warning text-dark";
+            } else if (gVal >= 600) {
+                gLabel = "BOCOR: LPG / Gas Terdeteksi!";
+                gStatus = "BAHAYA";
+                gClass = "bg-danger";
             }
-            
-            document.getElementById("gas-alert").innerText = gasStatus;
-            document.getElementById("gas-alert").className = `status-badge ${gasColor} mt-2 d-inline-block`;
-            document.getElementById("gas-type").innerText = gasType;
+            document.getElementById("gas-label").innerText = gLabel;
+            document.getElementById("gas-status").innerText = gStatus;
+            document.getElementById("gas-status").className = "status-badge " + gClass;
 
-            // Update Control Status
-            const ctrl = (d.control || "stop").toUpperCase();
-            document.getElementById("log-status").innerText = ctrl;
-            document.getElementById("log-status").className = `status-badge ${ctrl === 'START' ? 'bg-success' : 'bg-danger'}`;
-
-            // Update Waktu
-            let now = new Date().toLocaleTimeString('id-ID');
-            document.getElementById("last-update").innerText = now;
-
-            // Update Grafik & Tabel
-            updateVisuals(now, d.suhu, d.kelembapan, d.gas);
+            // Update Grafik & Tabel Lokal
+            const timeNow = new Date().toLocaleTimeString();
+            updateCharts(timeNow, data.suhu, data.kelembapan, data.gas);
+            updateTable(timeNow, data.suhu, data.kelembapan, data.gas);
         }
     });
 
-    function updateVisuals(time, t, h, g) {
-        // Update Charts
-        [thChart, gasChart].forEach(chart => {
-            if(chart.data.labels.length > 10) {
-                chart.data.labels.shift();
-                chart.data.datasets.forEach(ds => ds.data.shift());
-            }
-            chart.data.labels.push(time);
-        });
+    // 4. FUNGSI UPDATE GRAFIK
+    function updateCharts(time, t, h, g) {
+        // Batasi data grafik hanya 10 poin terakhir agar tidak numpuk
+        if (chartTH.data.labels.length > 10) {
+            chartTH.data.labels.shift();
+            chartTH.data.datasets[0].data.shift();
+            chartTH.data.datasets[1].data.shift();
+            
+            chartGas.data.labels.shift();
+            chartGas.data.datasets[0].data.shift();
+        }
 
-        thChart.data.datasets[0].data.push(t);
-        thChart.data.datasets[1].data.push(h);
-        gasChart.data.datasets[0].data.push(g);
-        
-        thChart.update();
-        gasChart.update();
+        chartTH.data.labels.push(time);
+        chartTH.data.datasets[0].data.push(t);
+        chartTH.data.datasets[1].data.push(h);
+        chartTH.update();
 
-        // Update Local Table
-        const hb = document.getElementById("historyBody");
-        let row = `<tr><td>${time}</td><td>${t}°C</td><td>${h}%</td><td>${g}</td></tr>`;
-        hb.insertAdjacentHTML('afterbegin', row);
-        if(hb.children.length > 10) hb.removeChild(hb.lastChild);
+        chartGas.data.labels.push(time);
+        chartGas.data.datasets[0].data.push(g);
+        chartGas.update();
     }
 
-    // 4. CONTROL FUNCTIONS
-    function setControl(v) { db.ref("monitoring/control").set(v); }
-    function updateInterval() {
-        let val = document.getElementById("intInput").value;
-        if(val) {
+    // 5. FUNGSI UPDATE TABEL LOKAL
+    function updateTable(time, t, h, g) {
+        const tbody = document.getElementById("tableBody");
+        const row = `<tr>
+            <td>${time}</td>
+            <td>${t}°C</td>
+            <td>${h}%</td>
+            <td>${g}</td>
+        </tr>`;
+        tbody.insertAdjacentHTML('afterbegin', row);
+        if (tbody.children.length > 10) tbody.removeChild(tbody.lastChild);
+    }
+
+    // 6. FUNGSI TOMBOL CONTROL
+    function updateControl(command) {
+        db.ref("monitoring/control").set(command);
+        alert("Sistem diperintahkan: " + command.toUpperCase());
+    }
+
+    function setIntervalFirebase() {
+        const val = document.getElementById("inputInterval").value;
+        if (val) {
             db.ref("monitoring/interval").set(parseInt(val));
-            alert("Interval diperbarui ke " + val + " detik");
+            alert("Interval diubah ke: " + val + " detik");
         }
     }
-    function resetLog() { document.getElementById("historyBody").innerHTML = ""; }
 </script>
 
 </body>
