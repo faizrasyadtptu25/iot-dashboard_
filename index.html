@@ -3,29 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IOT SMART DASHBOARD - FAIZ</title>
+    <title>SMART IOT MONITORING - FAIZ PERFECT</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', sans-serif; padding-bottom: 50px; }
-        .header { background: linear-gradient(135deg, #1f6feb 0%, #0d1117 100%); padding: 40px 0; border-bottom: 1px solid #30363d; margin-bottom: 30px; }
+        body { background: #0b0e14; color: #c9d1d9; font-family: 'Segoe UI', sans-serif; padding: 20px; }
         .card-custom { background: #161b22; border: 1px solid #30363d; border-radius: 15px; padding: 20px; height: 100%; transition: 0.3s; }
         .card-custom:hover { border-color: #58a6ff; }
-        .value-text { font-size: 2.8rem; font-weight: 800; color: #58a6ff; }
-        .chart-container { position: relative; height: 250px; width: 100%; }
-        .table-wrapper { max-height: 300px; overflow-y: auto; }
+        .value-text { font-size: 2.5rem; font-weight: 800; color: #58a6ff; }
+        .gas-label { font-size: 1.2rem; font-weight: bold; color: #f9d423; }
+        .chart-container { position: relative; height: 250px; }
+        iframe { border-radius: 15px; border: 1px solid #30363d; width: 100%; height: 400px; }
     </style>
 </head>
 <body>
 
-<div class="header text-center">
-    <h1 class="fw-bold">SMART IOT MONITORING SYSTEM</h1>
-    <p>Logging Status: <span id="log-status" class="badge bg-success">ACTIVE</span></p>
-</div>
-
 <div class="container">
+    <div class="text-center mb-5">
+        <h1 class="fw-bold text-primary">IOT ADVANCED DASHBOARD</h1>
+        <p>Logging Status: <span id="log-status" class="badge bg-secondary">FETCHING...</span></p>
+    </div>
+
     <div class="row g-4 mb-4 text-center">
         <div class="col-md-4">
             <div class="card-custom">
@@ -41,62 +41,53 @@
         </div>
         <div class="col-md-4">
             <div class="card-custom">
-                <div class="text-secondary small">GAS LEVEL (MQ5)</div>
-                <div class="value-text" id="gas">--</div>
-                <span id="gas-status" class="badge bg-secondary">CHECKING</span>
+                <div class="text-secondary small">GAS DETECTOR (MQ5)</div>
+                <div class="gas-label" id="gas-type">Detecting Gas...</div>
+                <div class="value-text" id="gas-val">--</div>
+                <span id="gas-status" class="badge bg-secondary">WAITING</span>
             </div>
         </div>
     </div>
 
     <div class="row g-4 mb-4">
-        <div class="col-md-6">
+        <div class="col-md-4">
             <div class="card-custom">
                 <h5>System Control</h5>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-success w-100" onclick="sendCmd('start')">START</button>
-                    <button class="btn btn-danger w-100" onclick="sendCmd('stop')">STOP</button>
-                    <button class="btn btn-warning w-100" onclick="resetLocal()">RESET</button>
+                <hr>
+                <button class="btn btn-success w-100 mb-2 fw-bold" onclick="setControl('start')">START SYSTEM</button>
+                <button class="btn btn-danger w-100 mb-2 fw-bold" onclick="setControl('stop')">STOP SYSTEM</button>
+                <button class="btn btn-warning w-100 fw-bold" onclick="resetSystem()">RESET LOG</button>
+                <div class="mt-4">
+                    <label class="small">Interval (Detik):</label>
+                    <div class="input-group">
+                        <input type="number" id="intInput" class="form-control bg-dark text-white border-secondary">
+                        <button class="btn btn-primary" onclick="updateInterval()">SET</button>
+                    </div>
                 </div>
-                <button class="btn btn-outline-info w-100 mt-3" onclick="exportToCSV()">Download Spreadsheet (CSV)</button>
             </div>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-8">
             <div class="card-custom">
-                <h5>Sampling Interval (s)</h5>
-                <div class="input-group mb-2">
-                    <input type="number" id="inputInterval" class="form-control bg-dark text-white border-secondary">
-                    <button class="btn btn-primary" onclick="updateInt()">Update</button>
-                </div>
-                <small>Current Interval: <span id="curInt">--</span> detik</small>
+                <h5>Real-time Analytics</h5>
+                <div class="chart-container"><canvas id="mainChart"></canvas></div>
             </div>
         </div>
     </div>
 
-    <div class="row g-4 mb-4">
-        <div class="col-md-6">
+    <div class="row g-4">
+        <div class="col-md-7">
             <div class="card-custom">
-                <h6 class="text-info">Temperature & Humidity Graph</h6>
-                <div class="chart-container"><canvas id="thChart"></canvas></div>
+                <h5>Cloud Spreadsheet View</h5>
+                <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQPb6Laeb5cq3hZ79xQ1W0ATit3EGmjQmEtTyqYaW35Y5HmZAMLaYJQ6wGq6fShBOXLFNAZgwEOafO5/pubhtml"></iframe>
             </div>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-5">
             <div class="card-custom">
-                <h6 class="text-warning">Gas Level Graph</h6>
-                <div class="chart-container"><canvas id="gChart"></canvas></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card-custom">
-                <h5>Real-time History Log</h5>
-                <div class="table-wrapper">
-                    <table class="table table-dark table-hover">
-                        <thead>
-                            <tr><th>Time</th><th>Temp</th><th>Hum</th><th>Gas</th><th>Status</th></tr>
-                        </thead>
-                        <tbody id="logBody"></tbody>
+                <h5>Local History Log</h5>
+                <div style="max-height: 350px; overflow-y: auto;">
+                    <table class="table table-dark table-sm small">
+                        <thead><tr><th>Time</th><th>T</th><th>H</th><th>G</th></tr></thead>
+                        <tbody id="historyBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -105,72 +96,69 @@
 </div>
 
 <script>
+    // KONFIGURASI FIREBASE
     const firebaseConfig = { databaseURL: "https://monitoring-iot-20edf-default-rtdb.asia-southeast1.firebasedatabase.app" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Inisialisasi Grafik
-    const thCtx = document.getElementById('thChart').getContext('2d');
-    const gCtx = document.getElementById('gChart').getContext('2d');
-    
-    let thChart = new Chart(thCtx, {
+    // CHART CONFIG
+    const ctx = document.getElementById('mainChart').getContext('2d');
+    let mainChart = new Chart(ctx, {
         type: 'line',
-        data: { labels: [], datasets: [{label:'Temp', borderColor:'#ff5f6d', data:[]}, {label:'Hum', borderColor:'#00f2fe', data:[]}] },
+        data: { labels: [], datasets: [
+            {label: 'Temp', borderColor: '#ff5f6d', data: [], tension: 0.4},
+            {label: 'Hum', borderColor: '#00f2fe', data: [], tension: 0.4},
+            {label: 'Gas', borderColor: '#f9d423', data: [], tension: 0.4}
+        ]},
         options: { responsive: true, maintainAspectRatio: false }
     });
 
-    let gChart = new Chart(gCtx, {
-        type: 'line',
-        data: { labels: [], datasets: [{label:'Gas', borderColor:'#f9d423', backgroundColor:'rgba(249,212,35,0.2)', fill:true, data:[]}] },
-        options: { responsive: true, maintainAspectRatio: false }
-    });
-
-    // Ambil Data Realtime
+    // READ REALTIME DATA
     db.ref("monitoring").on("value", (snap) => {
         const d = snap.val();
         if(d) {
             document.getElementById("temp").innerText = d.suhu;
             document.getElementById("hum").innerText = d.kelembapan;
-            document.getElementById("gas").innerText = d.gas;
+            document.getElementById("gas-val").innerText = d.gas;
             document.getElementById("gas-status").innerText = d.status;
             document.getElementById("gas-status").className = d.status == "AMAN" ? "badge bg-success" : "badge bg-danger";
-            document.getElementById("curInt").innerText = d.interval || "5";
-
-            let time = new Date().toLocaleTimeString();
+            document.getElementById("log-status").innerText = (d.control || "STOP").toUpperCase();
+            document.getElementById("log-status").className = d.control == "start" ? "badge bg-success" : "badge bg-danger";
             
-            // Update Table
-            let row = `<tr><td>${time}</td><td>${d.suhu}</td><td>${d.kelembapan}</td><td>${d.gas}</td><td>${d.status}</td></tr>`;
-            const body = document.getElementById("logBody");
-            body.insertAdjacentHTML('afterbegin', row);
-            if(body.children.length > 20) body.removeChild(body.lastChild);
+            // Logika Deteksi Jenis Gas (MQ5 biasanya deteksi LPG/Metana)
+            let gasType = d.gas > 400 ? "LPG / Smoke Detected" : "Clean Air";
+            document.getElementById("gas-type").innerText = gasType;
 
-            // Update Chart
-            if(thChart.data.labels.length > 10) { 
-                thChart.data.labels.shift(); thChart.data.datasets[0].data.shift(); thChart.data.datasets[1].data.shift(); 
-                gChart.data.labels.shift(); gChart.data.datasets[0].data.shift();
-            }
-            thChart.data.labels.push(time); thChart.data.datasets[0].data.push(d.suhu); thChart.data.datasets[1].data.push(d.kelembapan);
-            gChart.data.labels.push(time); gChart.data.datasets[0].data.push(d.gas);
-            thChart.update(); gChart.update();
+            // Update Chart & Table
+            let now = new Date().toLocaleTimeString();
+            updateDashboard(now, d.suhu, d.kelembapan, d.gas);
         }
     });
 
-    function sendCmd(c) { db.ref("monitoring/control").set(c); document.getElementById("log-status").innerText = c.toUpperCase(); }
-    function updateInt() { db.ref("monitoring/interval").set(parseInt(document.getElementById("inputInterval").value)); }
-    function resetLocal() { document.getElementById("logBody").innerHTML = ""; }
-    
-    function exportToCSV() {
-        let csv = "Time,Temp,Hum,Gas,Status\n";
-        document.querySelectorAll("#logBody tr").forEach(tr => {
-            let line = [];
-            tr.querySelectorAll("td").forEach(td => line.push(td.innerText));
-            csv += line.join(",") + "\n";
-        });
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = 'history_iot.csv'; a.click();
+    function updateDashboard(time, t, h, g) {
+        if(mainChart.data.labels.length > 10) {
+            mainChart.data.labels.shift();
+            mainChart.data.datasets.forEach(ds => ds.data.shift());
+        }
+        mainChart.data.labels.push(time);
+        mainChart.data.datasets[0].data.push(t);
+        mainChart.data.datasets[1].data.push(h);
+        mainChart.data.datasets[2].data.push(g);
+        mainChart.update();
+
+        let row = `<tr><td>${time}</td><td>${t}</td><td>${h}</td><td>${g}</td></tr>`;
+        const hb = document.getElementById("historyBody");
+        hb.insertAdjacentHTML('afterbegin', row);
+        if(hb.children.length > 10) hb.removeChild(hb.lastChild);
     }
+
+    // CONTROL FUNCTIONS
+    function setControl(v) { db.ref("monitoring/control").set(v); }
+    function updateInterval() {
+        let val = document.getElementById("intInput").value;
+        if(val) db.ref("monitoring/interval").set(parseInt(val));
+    }
+    function resetSystem() { db.ref("monitoring/history").remove(); location.reload(); }
 </script>
 </body>
 </html>
