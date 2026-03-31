@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IOT SMART DASHBOARD - FAIZ</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', sans-serif; padding-bottom: 50px; }
+        .header { background: linear-gradient(135deg, #1f6feb 0%, #0d1117 100%); padding: 40px 0; border-bottom: 1px solid #30363d; margin-bottom: 30px; }
+        .card-custom { background: #161b22; border: 1px solid #30363d; border-radius: 15px; padding: 20px; height: 100%; transition: 0.3s; }
+        .card-custom:hover { border-color: #58a6ff; }
+        .value-text { font-size: 2.8rem; font-weight: 800; color: #58a6ff; }
+        .chart-container { position: relative; height: 250px; width: 100%; }
+        .table-wrapper { max-height: 300px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+
+<div class="header text-center">
+    <h1 class="fw-bold">SMART IOT MONITORING SYSTEM</h1>
+    <p>Logging Status: <span id="log-status" class="badge bg-success">ACTIVE</span></p>
+</div>
+
+<div class="container">
+    <div class="row g-4 mb-4 text-center">
+        <div class="col-md-4">
+            <div class="card-custom">
+                <div class="text-secondary small">TEMPERATURE</div>
+                <div class="value-text"><span id="temp">--</span>°C</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card-custom">
+                <div class="text-secondary small">HUMIDITY</div>
+                <div class="value-text"><span id="hum">--</span>%</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card-custom">
+                <div class="text-secondary small">GAS LEVEL (MQ5)</div>
+                <div class="value-text" id="gas">--</div>
+                <span id="gas-status" class="badge bg-secondary">CHECKING</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card-custom">
+                <h5>System Control</h5>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-success w-100" onclick="sendCmd('start')">START</button>
+                    <button class="btn btn-danger w-100" onclick="sendCmd('stop')">STOP</button>
+                    <button class="btn btn-warning w-100" onclick="resetLocal()">RESET</button>
+                </div>
+                <button class="btn btn-outline-info w-100 mt-3" onclick="exportToCSV()">Download Spreadsheet (CSV)</button>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card-custom">
+                <h5>Sampling Interval (s)</h5>
+                <div class="input-group mb-2">
+                    <input type="number" id="inputInterval" class="form-control bg-dark text-white border-secondary">
+                    <button class="btn btn-primary" onclick="updateInt()">Update</button>
+                </div>
+                <small>Current Interval: <span id="curInt">--</span> detik</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card-custom">
+                <h6 class="text-info">Temperature & Humidity Graph</h6>
+                <div class="chart-container"><canvas id="thChart"></canvas></div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card-custom">
+                <h6 class="text-warning">Gas Level Graph</h6>
+                <div class="chart-container"><canvas id="gChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card-custom">
+                <h5>Real-time History Log</h5>
+                <div class="table-wrapper">
+                    <table class="table table-dark table-hover">
+                        <thead>
+                            <tr><th>Time</th><th>Temp</th><th>Hum</th><th>Gas</th><th>Status</th></tr>
+                        </thead>
+                        <tbody id="logBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = { databaseURL: "https://monitoring-iot-20edf-default-rtdb.asia-southeast1.firebasedatabase.app" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Inisialisasi Grafik
+    const thCtx = document.getElementById('thChart').getContext('2d');
+    const gCtx = document.getElementById('gChart').getContext('2d');
+    
+    let thChart = new Chart(thCtx, {
+        type: 'line',
+        data: { labels: [], datasets: [{label:'Temp', borderColor:'#ff5f6d', data:[]}, {label:'Hum', borderColor:'#00f2fe', data:[]}] },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    let gChart = new Chart(gCtx, {
+        type: 'line',
+        data: { labels: [], datasets: [{label:'Gas', borderColor:'#f9d423', backgroundColor:'rgba(249,212,35,0.2)', fill:true, data:[]}] },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    // Ambil Data Realtime
+    db.ref("monitoring").on("value", (snap) => {
+        const d = snap.val();
+        if(d) {
+            document.getElementById("temp").innerText = d.suhu;
+            document.getElementById("hum").innerText = d.kelembapan;
+            document.getElementById("gas").innerText = d.gas;
+            document.getElementById("gas-status").innerText = d.status;
+            document.getElementById("gas-status").className = d.status == "AMAN" ? "badge bg-success" : "badge bg-danger";
+            document.getElementById("curInt").innerText = d.interval || "5";
+
+            let time = new Date().toLocaleTimeString();
+            
+            // Update Table
+            let row = `<tr><td>${time}</td><td>${d.suhu}</td><td>${d.kelembapan}</td><td>${d.gas}</td><td>${d.status}</td></tr>`;
+            const body = document.getElementById("logBody");
+            body.insertAdjacentHTML('afterbegin', row);
+            if(body.children.length > 20) body.removeChild(body.lastChild);
+
+            // Update Chart
+            if(thChart.data.labels.length > 10) { 
+                thChart.data.labels.shift(); thChart.data.datasets[0].data.shift(); thChart.data.datasets[1].data.shift(); 
+                gChart.data.labels.shift(); gChart.data.datasets[0].data.shift();
+            }
+            thChart.data.labels.push(time); thChart.data.datasets[0].data.push(d.suhu); thChart.data.datasets[1].data.push(d.kelembapan);
+            gChart.data.labels.push(time); gChart.data.datasets[0].data.push(d.gas);
+            thChart.update(); gChart.update();
+        }
+    });
+
+    function sendCmd(c) { db.ref("monitoring/control").set(c); document.getElementById("log-status").innerText = c.toUpperCase(); }
+    function updateInt() { db.ref("monitoring/interval").set(parseInt(document.getElementById("inputInterval").value)); }
+    function resetLocal() { document.getElementById("logBody").innerHTML = ""; }
+    
+    function exportToCSV() {
+        let csv = "Time,Temp,Hum,Gas,Status\n";
+        document.querySelectorAll("#logBody tr").forEach(tr => {
+            let line = [];
+            tr.querySelectorAll("td").forEach(td => line.push(td.innerText));
+            csv += line.join(",") + "\n";
+        });
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'history_iot.csv'; a.click();
+    }
+</script>
+</body>
+</html>
