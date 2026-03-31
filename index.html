@@ -61,7 +61,11 @@
             <div class="card-custom">
                 <h5 class="mb-3">System Control</h5>
                 <button class="btn btn-success w-100 mb-2 fw-bold" onclick="updateControl('start')">START LOGGING</button>
-                <button class="btn btn-danger w-100 mb-3 fw-bold" onclick="updateControl('stop')">STOP LOGGING</button>
+                <button class="btn btn-danger w-100 mb-2 fw-bold" onclick="updateControl('stop')">STOP LOGGING</button>
+                
+                <button class="btn btn-warning w-100 mb-3 fw-bold text-dark" onclick="resetLocalDashboard()">RESET LOCAL LOG</button>
+                
+                <hr class="border-secondary">
                 
                 <label class="small fw-bold mb-1">Update Interval (Detik):</label>
                 <div class="input-group mb-3">
@@ -84,7 +88,7 @@
                             </tr>
                         </thead>
                         <tbody id="tableBody">
-                            </tbody>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -113,14 +117,13 @@
 </div>
 
 <script>
-    // 1. KONFIGURASI FIREBASE (Sesuai info kamu)
     const firebaseConfig = {
         databaseURL: "https://monitoring-iot-20edf-default-rtdb.asia-southeast1.firebasedatabase.app"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 2. INISIALISASI GRAFIK
+    // INISIALISASI GRAFIK
     const ctxTH = document.getElementById('chartTH').getContext('2d');
     const chartTH = new Chart(ctxTH, {
         type: 'line',
@@ -144,22 +147,19 @@
         options: { responsive: true, maintainAspectRatio: false }
     });
 
-    // 3. BACA DATA DARI FIREBASE (REALTIME)
+    // BACA DATA DARI FIREBASE
     db.ref("monitoring").on("value", (snapshot) => {
         const data = snapshot.val();
         if (data) {
-            // Update Angka
             document.getElementById("temp").innerText = data.suhu || 0;
             document.getElementById("hum").innerText = data.kelembapan || 0;
             document.getElementById("gas-val").innerText = data.gas || 0;
             document.getElementById("current-interval").innerText = data.interval || 0;
 
-            // Update Label Status Logging
             const logStatus = document.getElementById("log-status");
             logStatus.innerText = (data.control || "STOP").toUpperCase();
             logStatus.className = data.control === "start" ? "badge bg-success" : "badge bg-danger";
 
-            // Logika Analisis Gas
             const gVal = data.gas;
             let gLabel = "Udara Bersih";
             let gStatus = "AMAN";
@@ -178,16 +178,13 @@
             document.getElementById("gas-status").innerText = gStatus;
             document.getElementById("gas-status").className = "status-badge " + gClass;
 
-            // Update Grafik & Tabel Lokal
             const timeNow = new Date().toLocaleTimeString();
             updateCharts(timeNow, data.suhu, data.kelembapan, data.gas);
             updateTable(timeNow, data.suhu, data.kelembapan, data.gas);
         }
     });
 
-    // 4. FUNGSI UPDATE GRAFIK
     function updateCharts(time, t, h, g) {
-        // Batasi data grafik hanya 10 poin terakhir agar tidak numpuk
         if (chartTH.data.labels.length > 10) {
             chartTH.data.labels.shift();
             chartTH.data.datasets[0].data.shift();
@@ -207,7 +204,6 @@
         chartGas.update();
     }
 
-    // 5. FUNGSI UPDATE TABEL LOKAL
     function updateTable(time, t, h, g) {
         const tbody = document.getElementById("tableBody");
         const row = `<tr>
@@ -220,7 +216,25 @@
         if (tbody.children.length > 10) tbody.removeChild(tbody.lastChild);
     }
 
-    // 6. FUNGSI TOMBOL CONTROL
+    // FUNGSI RESET LOKAL (YANG KAMU TANYAKAN)
+    function resetLocalDashboard() {
+        // 1. Kosongkan Data Grafik Suhu/Hum
+        chartTH.data.labels = [];
+        chartTH.data.datasets[0].data = [];
+        chartTH.data.datasets[1].data = [];
+        chartTH.update();
+
+        // 2. Kosongkan Data Grafik Gas
+        chartGas.data.labels = [];
+        chartGas.data.datasets[0].data = [];
+        chartGas.update();
+
+        // 3. Kosongkan Tabel Lokal
+        document.getElementById("tableBody").innerHTML = "";
+
+        alert("Local Log & Grafik berhasil dibersihkan!");
+    }
+
     function updateControl(command) {
         db.ref("monitoring/control").set(command);
         alert("Sistem diperintahkan: " + command.toUpperCase());
