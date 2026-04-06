@@ -29,7 +29,7 @@
             min-height: 100vh;
         }
 
-        .header-box { padding: 40px 0; text-shadow: 0 0 10px var(--neon-cyan); }
+        .header-box { padding: 30px 0; text-shadow: 0 0 10px var(--neon-cyan); }
         .project-title { color: var(--neon-cyan); letter-spacing: 3px; font-weight: 800; text-transform: uppercase; }
         .names { color: var(--neon-pink); font-weight: 600; letter-spacing: 2px; }
 
@@ -37,57 +37,65 @@
             background: var(--card-bg);
             border: 2px solid #3d126e;
             border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 25px;
+            padding: 20px;
+            margin-bottom: 20px;
             backdrop-filter: blur(10px);
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
         }
 
-        .value-text { font-size: 3.5rem; font-weight: 900; color: #ffffff; text-shadow: 0 0 15px var(--neon-cyan); }
-        .unit { font-size: 1.2rem; color: var(--neon-cyan); margin-left: 5px; }
+        .value-text { font-size: 3rem; font-weight: 900; color: #ffffff; text-shadow: 0 0 15px var(--neon-cyan); }
+        .unit { font-size: 1rem; color: var(--neon-cyan); margin-left: 5px; }
+        .status-badge { font-size: 0.9rem; padding: 6px 15px; border-radius: 5px; font-weight: bold; text-transform: uppercase; }
+        .chart-container { position: relative; height: 250px; width: 100%; }
 
-        .status-badge { font-size: 1rem; padding: 8px 20px; border-radius: 5px; font-weight: bold; text-transform: uppercase; }
-        .chart-container { position: relative; height: 300px; width: 100%; }
-
-        .btn-cyber { border: 2px solid; background: transparent; font-weight: bold; transition: 0.3s; margin-bottom: 10px; }
+        .btn-cyber { border: 2px solid; background: transparent; font-weight: bold; transition: 0.3s; margin-bottom: 8px; }
         .btn-start { color: var(--neon-cyan); border-color: var(--neon-cyan); }
-        .btn-start:hover { background: var(--neon-cyan); color: black; box-shadow: 0 0 20px var(--neon-cyan); }
+        .btn-start:hover { background: var(--neon-cyan); color: black; box-shadow: 0 0 15px var(--neon-cyan); }
         .btn-stop { color: var(--neon-pink); border-color: var(--neon-pink); }
-        .btn-stop:hover { background: var(--neon-pink); color: white; box-shadow: 0 0 20px var(--neon-pink); }
+        .btn-stop:hover { background: var(--neon-pink); color: white; box-shadow: 0 0 15px var(--neon-pink); }
+        .btn-reset { color: var(--neon-yellow); border-color: var(--neon-yellow); font-size: 0.8rem; }
+        .btn-reset:hover { background: var(--neon-yellow); color: black; }
 
-        .btn-sheet { background: linear-gradient(45deg, #1d976c, #93f9b9); color: black; border: none; padding: 15px; font-size: 1.1rem; }
-
-        /* Custom Table Style */
-        .table-cyber { color: var(--neon-cyan) !important; background: transparent !important; }
-        .table-cyber th { color: var(--neon-pink) !important; text-transform: uppercase; border-bottom: 2px solid var(--neon-pink) !important; }
-        .table-cyber td { border-bottom: 1px solid #3d126e !important; }
-        .scroll-table { max-height: 400px; overflow-y: auto; }
-
+        .table-container { max-height: 400px; overflow-y: auto; }
+        .table-cyber { color: var(--text-main) !important; font-size: 0.85rem; }
+        .table-cyber th { color: var(--neon-yellow); border-bottom: 2px solid var(--neon-pink); position: sticky; top: 0; background: #1a0b2e; }
+        
+        .btn-sheet { background: linear-gradient(45deg, #1d976c, #93f9b9); color: black; border: none; padding: 10px; font-weight: bold; }
+        .label-custom { color: var(--neon-yellow); font-weight: bold; font-size: 0.8rem; }
         input.form-control { background: #000; border: 1px solid var(--neon-cyan); color: var(--neon-cyan); }
-        .label-custom { color: var(--neon-yellow); font-weight: bold; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
-<div class="container py-4">
+<div class="container py-3">
     <div class="text-center header-box">
-        <h1 class="project-title">Smart IoT Monitoring</h1>
-        <h4 class="names">FAIZ & FIAN PROJECT</h4>
-        <div class="mt-3">
-            <span class="label-custom">SISTEM STATUS:</span> 
-            <span id="log-status" class="status-badge bg-secondary text-white">OFFLINE</span>
+        <h2 class="project-title">Smart IoT Monitoring</h2>
+        <h5 class="names">FAIZ & FIAN PROJECT</h5>
+        <div class="mt-2">
+            <span class="label-custom">STATUS:</span> 
+            <span id="log-status" class="status-badge bg-secondary">LOADING</span>
         </div>
     </div>
 
-    <div class="row text-center">
-        <div class="col-md-4"><div class="card-cyber"><div class="label-custom">TEMPERATURE</div><div class="value-text"><span id="temp">0</span><span class="unit">°C</span></div></div></div>
-        <div class="col-md-4"><div class="card-cyber"><div class="label-custom">HUMIDITY</div><div class="value-text" style="text-shadow: 0 0 15px var(--neon-pink);"><span id="hum">0</span><span class="unit" style="color: var(--neon-pink);">%</span></div></div></div>
+    <div class="row text-center mb-3">
         <div class="col-md-4">
             <div class="card-cyber">
-                <div class="label-custom">GAS LEVEL (MQ5)</div>
+                <div class="label-custom">TEMPERATURE</div>
+                <div class="value-text"><span id="temp">0</span><span class="unit">°C</span></div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card-cyber">
+                <div class="label-custom">HUMIDITY</div>
+                <div class="value-text" style="text-shadow: 0 0 15px var(--neon-pink);"><span id="hum">0</span><span class="unit" style="color: var(--neon-pink);">%</span></div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card-cyber">
+                <div class="label-custom">GAS LEVEL</div>
                 <div class="value-text" style="text-shadow: 0 0 15px var(--neon-yellow);"><span id="gas-val">0</span><span class="unit" style="color: var(--neon-yellow);">PPM</span></div>
-                <div id="gas-label" class="fw-bold mb-2 small text-white">Analysing...</div>
-                <span id="gas-status" class="status-badge bg-secondary text-white">WAITING</span>
+                <div id="gas-label" class="small text-white">Analysing...</div>
+                <span id="gas-status" class="status-badge bg-secondary mt-1">WAITING</span>
             </div>
         </div>
     </div>
@@ -95,49 +103,51 @@
     <div class="row">
         <div class="col-md-4">
             <div class="card-cyber">
-                <h5 class="mb-3 text-white border-bottom pb-2">System Control</h5>
-                <button class="btn btn-cyber btn-start w-100" onclick="updateControl('start')">ACTIVATE LOGGING</button>
-                <button class="btn btn-cyber btn-stop w-100" onclick="updateControl('stop')">DEACTIVATE LOGGING</button>
-                <div class="mt-4">
-                    <label class="label-custom mb-1">Update Interval (Detik):</label>
-                    <div class="input-group">
+                <h6 class="text-white border-bottom pb-2 mb-3">System Control</h6>
+                <button class="btn btn-cyber btn-start w-100" onclick="updateControl('start')">START LOGGING</button>
+                <button class="btn btn-cyber btn-stop w-100" onclick="updateControl('stop')">STOP LOGGING</button>
+                <button class="btn btn-cyber btn-reset w-100 mt-2" onclick="resetLocalLog()">RESET LOCAL HISTORY</button>
+                
+                <div class="mt-3">
+                    <label class="label-custom">Interval (s):</label>
+                    <div class="input-group input-group-sm">
                         <input type="number" id="inputInterval" class="form-control" placeholder="10">
                         <button class="btn btn-info fw-bold" onclick="setIntervalFirebase()">SET</button>
                     </div>
-                    <p class="small mt-2">Active Interval: <span id="current-interval" class="text-info fw-bold">--</span> s</p>
+                    <p class="small mt-1 text-dim">Current: <span id="current-interval" class="text-info">--</span>s</p>
                 </div>
             </div>
+
             <div class="card-cyber">
-                <h5 class="mb-3 text-white border-bottom pb-2">Access Database</h5>
-                <a href="https://docs.google.com/spreadsheets/d/1tOldPDWt8bSMQEHbNFAw1R3bnHn9bJska-7hAAMKoY/edit?usp=sharing" target="_blank" class="btn btn-sheet w-100 fw-bold">OPEN CLOUD SPREADSHEET ↗</a>
+                <h6 class="text-white border-bottom pb-2 mb-3">Cloud Data</h6>
+                <a href="https://docs.google.com/spreadsheets/d/1tOldPDWt8bSMQEHbNFAw1R3bnHn9nBJska-7hAAMKoY/edit?usp=sharing" target="_blank" class="btn btn-sheet w-100 btn-sm">
+                    VIEW SPREADSHEET ↗
+                </a>
             </div>
         </div>
 
         <div class="col-md-8">
             <div class="card-cyber">
-                <h5 class="text-white mb-3">Live Environmental Chart</h5>
+                <h6 class="text-white mb-2">Live Charts</h6>
                 <div class="chart-container"><canvas id="chartTH"></canvas></div>
-            </div>
-            <div class="card-cyber">
-                <h5 class="text-white mb-3">Gas Concentration History</h5>
-                <div class="chart-container"><canvas id="chartGas"></canvas></div>
+                <div class="chart-container mt-3"><canvas id="chartGas"></canvas></div>
             </div>
         </div>
     </div>
 
-    <div class="row">
+    <div class="row mt-2">
         <div class="col-12">
             <div class="card-cyber">
-                <h5 class="text-white mb-3 border-bottom pb-2">Local History (Real-time 20 Logs)</h5>
-                <div class="scroll-table">
-                    <table class="table table-cyber text-center">
+                <h6 class="text-white border-bottom pb-2 mb-3">Real-time Local History (Last 20 Data)</h6>
+                <div class="table-container">
+                    <table class="table table-dark table-hover table-cyber text-center">
                         <thead>
                             <tr>
-                                <th>Time</th>
-                                <th>Temp (°C)</th>
-                                <th>Hum (%)</th>
-                                <th>Gas (PPM)</th>
-                                <th>Status</th>
+                                <th>TIME</th>
+                                <th>TEMP (°C)</th>
+                                <th>HUM (%)</th>
+                                <th>GAS (PPM)</th>
+                                <th>STATUS</th>
                             </tr>
                         </thead>
                         <tbody id="tableBody">
@@ -147,35 +157,36 @@
             </div>
         </div>
     </div>
-
-    <div class="row mt-3"><div class="col-12 text-center"><p class="text-dim small">© 2026 Faiz & Fian IoT Project | Built with Firebase & Neon UI</p></div></div>
 </div>
 
 <script>
+    // 1. FIREBASE CONFIG
     const firebaseConfig = { databaseURL: "https://monitoring-iot-20edf-default-rtdb.asia-southeast1.firebasedatabase.app" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // 2. CHART CONFIG
     Chart.defaults.color = '#b4a9c3';
-    Chart.defaults.borderColor = '#3d126e';
+    const chartOptions = { responsive: true, maintainAspectRatio: false, scales: { y: { grid: { color: '#220a46' } }, x: { grid: { display: false } } } };
 
     const ctxTH = document.getElementById('chartTH').getContext('2d');
     const chartTH = new Chart(ctxTH, {
         type: 'line',
         data: { labels: [], datasets: [
-            { label: 'Temp', borderColor: '#00f3ff', data: [], tension: 0.4, borderWidth: 3 },
-            { label: 'Hum', borderColor: '#ff007a', data: [], tension: 0.4, borderWidth: 3 }
+            { label: 'Temp', borderColor: '#00f3ff', data: [], tension: 0.4, borderWidth: 2 },
+            { label: 'Hum', borderColor: '#ff007a', data: [], tension: 0.4, borderWidth: 2 }
         ]},
-        options: { responsive: true, maintainAspectRatio: false }
+        options: chartOptions
     });
 
     const ctxGas = document.getElementById('chartGas').getContext('2d');
     const chartGas = new Chart(ctxGas, {
         type: 'line',
-        data: { labels: [], datasets: [{ label: 'Gas (PPM)', borderColor: '#fde047', data: [], tension: 0.4, fill: true, backgroundColor: 'rgba(253, 224, 71, 0.1)', borderWidth: 3 }]},
-        options: { responsive: true, maintainAspectRatio: false }
+        data: { labels: [], datasets: [{ label: 'Gas (PPM)', borderColor: '#fde047', data: [], tension: 0.4, backgroundColor: 'rgba(253, 224, 71, 0.1)', fill: true, borderWidth: 2 }]},
+        options: chartOptions
     });
 
+    // 3. LISTEN TO FIREBASE
     db.ref("monitoring").on("value", (snapshot) => {
         const data = snapshot.val();
         if (data) {
@@ -189,17 +200,16 @@
             logStatus.innerText = (data.control || "STOP").toUpperCase();
             logStatus.className = data.control === "start" ? "status-badge bg-success" : "status-badge bg-danger";
 
-            let gLabel = "Kualitas Udara: Baik", gStatus = "AMAN", gClass = "bg-success";
-            if (gVal > 150 && gVal < 300) { gLabel = "Terdeteksi Asap", gStatus = "WASPADA", gClass = "bg-warning text-dark"; }
-            else if (gVal >= 300) { gLabel = "BAHAYA: KEBOCORAN!", gStatus = "BAHAYA", gClass = "bg-danger"; }
+            let gStatus = gVal >= 300 ? "BAHAYA" : (gVal > 150 ? "WASPADA" : "AMAN");
+            let gClass = gVal >= 300 ? "bg-danger" : (gVal > 150 ? "bg-warning text-dark" : "bg-success");
             
-            document.getElementById("gas-label").innerText = gLabel;
+            document.getElementById("gas-label").innerText = gVal >= 300 ? "KEBOCORAN TERDETEKSI!" : "Kualitas Udara: Baik";
             document.getElementById("gas-status").innerText = gStatus;
             document.getElementById("gas-status").className = "status-badge " + gClass;
 
             const timeNow = new Date().toLocaleTimeString();
             updateCharts(timeNow, data.suhu, data.kelembapan, gVal);
-            updateTable(timeNow, data.suhu, data.kelembapan, gVal, gStatus);
+            updateTable(timeNow, data.suhu, data.kelembapan, gVal, gStatus, gClass);
         }
     });
 
@@ -208,28 +218,38 @@
             chartTH.data.labels.shift(); chartTH.data.datasets[0].data.shift(); chartTH.data.datasets[1].data.shift();
             chartGas.data.labels.shift(); chartGas.data.datasets[0].data.shift();
         }
-        chartTH.data.labels.push(time); chartTH.data.datasets[0].data.push(t); chartTH.data.datasets[1].data.push(h); chartTH.update();
-        chartGas.data.labels.push(time); chartGas.data.datasets[0].data.push(g); chartGas.update();
+        chartTH.data.labels.push(time); chartTH.data.datasets[0].data.push(t); chartTH.data.datasets[1].data.push(h);
+        chartGas.data.labels.push(time); chartGas.data.datasets[0].data.push(g);
+        chartTH.update(); chartGas.update();
     }
 
-    function updateTable(time, t, h, g, status) {
+    function updateTable(time, t, h, g, stat, cls) {
         const tbody = document.getElementById("tableBody");
         const row = `<tr>
             <td>${time}</td>
-            <td>${t.toFixed(1)}°C</td>
-            <td>${h.toFixed(0)}%</td>
+            <td>${t.toFixed(1)}</td>
+            <td>${h.toFixed(0)}</td>
             <td>${g.toFixed(1)}</td>
-            <td>${status}</td>
+            <td><span class="badge ${cls}" style="font-size:0.7rem">${stat}</span></td>
         </tr>`;
         tbody.insertAdjacentHTML('afterbegin', row);
         if (tbody.children.length > 20) tbody.removeChild(tbody.lastChild);
     }
 
+    function resetLocalLog() {
+        document.getElementById("tableBody").innerHTML = "";
+        chartTH.data.labels = []; chartTH.data.datasets.forEach(d => d.data = []);
+        chartGas.data.labels = []; chartGas.data.datasets[0].data = [];
+        chartTH.update(); chartGas.update();
+        alert("Histori Lokal Direset!");
+    }
+
     function updateControl(command) { db.ref("monitoring/control").set(command); }
     function setIntervalFirebase() {
         const val = document.getElementById("inputInterval").value;
-        if (val && val > 0) db.ref("monitoring/interval").set(parseInt(val));
+        if (val > 0) db.ref("monitoring/interval").set(parseInt(val));
     }
 </script>
+
 </body>
 </html>
