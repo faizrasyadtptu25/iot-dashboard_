@@ -20,6 +20,7 @@
         .chart-container { position: relative; height: 300px; width: 100%; }
         iframe { width: 100%; height: 450px; border-radius: 8px; border: 1px solid #30363d; }
         .table-dark { background-color: #161b22 !important; }
+        hr { border-color: #30363d; opacity: 1; }
     </style>
 </head>
 <body>
@@ -49,7 +50,7 @@
         <div class="col-md-4">
             <div class="card-custom">
                 <div class="text-uppercase small fw-bold text-secondary">Gas Detector (MQ5)</div>
-                <div class="value-text" id="gas-val">0</div>
+                <div class="value-text"><span id="gas-val">0</span><span class="unit"> PPM</span></div>
                 <div id="gas-label" class="fw-bold text-warning mb-2 small">Analysing...</div>
                 <span id="gas-status" class="status-badge bg-secondary text-white">WAITING</span>
             </div>
@@ -62,14 +63,13 @@
                 <h5 class="mb-3">System Control</h5>
                 <button class="btn btn-success w-100 mb-2 fw-bold" onclick="updateControl('start')">START LOGGING</button>
                 <button class="btn btn-danger w-100 mb-2 fw-bold" onclick="updateControl('stop')">STOP LOGGING</button>
-                
                 <button class="btn btn-warning w-100 mb-3 fw-bold text-dark" onclick="resetLocalDashboard()">RESET LOCAL LOG</button>
                 
-                <hr class="border-secondary">
+                <hr>
                 
                 <label class="small fw-bold mb-1">Update Interval (Detik):</label>
                 <div class="input-group mb-3">
-                    <input type="number" id="inputInterval" class="form-control bg-dark text-white border-secondary" placeholder="Contoh: 5">
+                    <input type="number" id="inputInterval" class="form-control bg-dark text-white border-secondary" placeholder="Contoh: 10">
                     <button class="btn btn-primary" onclick="setIntervalFirebase()">SET</button>
                 </div>
                 <p class="small text-muted text-center">Interval saat ini: <span id="current-interval" class="text-white">--</span> detik</p>
@@ -84,11 +84,10 @@
                                 <th>Waktu</th>
                                 <th>Temp</th>
                                 <th>Hum</th>
-                                <th>Gas</th>
+                                <th>PPM</th>
                             </tr>
                         </thead>
-                        <tbody id="tableBody">
-                        </tbody>
+                        <tbody id="tableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -100,7 +99,7 @@
                 <div class="chart-container"><canvas id="chartTH"></canvas></div>
             </div>
             <div class="card-custom">
-                <h5>Grafik Kadar Gas (MQ5)</h5>
+                <h5>Grafik Kadar Gas (PPM)</h5>
                 <div class="chart-container"><canvas id="chartGas"></canvas></div>
             </div>
         </div>
@@ -110,6 +109,7 @@
         <div class="col-12">
             <div class="card-custom">
                 <h5 class="mb-3">Cloud Spreadsheet History (Database Utama)</h5>
+                <p class="small text-muted">Catatan: Google Spreadsheet diperbarui secara otomatis setiap 1 menit.</p>
                 <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQPb6Laeb5cq3hZ79xQ1W0ATit3EGmjQmEtTyqYaW35Y5HmZAMLaYJQ6wGq6fShBOXLFNAZgwEOafO5/pubhtml?widget=true&amp;headers=false"></iframe>
             </div>
         </div>
@@ -117,13 +117,14 @@
 </div>
 
 <script>
+    // 1. FIREBASE CONFIG
     const firebaseConfig = {
         databaseURL: "https://monitoring-iot-20edf-default-rtdb.asia-southeast1.firebasedatabase.app"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // INISIALISASI GRAFIK
+    // 2. CHART INITIALIZATION
     const ctxTH = document.getElementById('chartTH').getContext('2d');
     const chartTH = new Chart(ctxTH, {
         type: 'line',
@@ -142,58 +143,62 @@
         type: 'line',
         data: {
             labels: [],
-            datasets: [{ label: 'Gas Level', borderColor: '#f9d423', data: [], tension: 0.3, backgroundColor: 'rgba(249, 212, 35, 0.1)', fill: true }]
+            datasets: [{ label: 'Gas (PPM)', borderColor: '#f9d423', data: [], tension: 0.3, backgroundColor: 'rgba(249, 212, 35, 0.1)', fill: true }]
         },
         options: { responsive: true, maintainAspectRatio: false }
     });
 
-    // BACA DATA DARI FIREBASE
+    // 3. LISTEN TO FIREBASE
     db.ref("monitoring").on("value", (snapshot) => {
         const data = snapshot.val();
         if (data) {
-            document.getElementById("temp").innerText = data.suhu || 0;
-            document.getElementById("hum").innerText = data.kelembapan || 0;
-            document.getElementById("gas-val").innerText = data.gas || 0;
+            // Update Card Values
+            document.getElementById("temp").innerText = data.suhu ? data.suhu.toFixed(1) : 0;
+            document.getElementById("hum").innerText = data.kelembapan ? data.kelembapan.toFixed(0) : 0;
+            const gVal = data.gas || 0;
+            document.getElementById("gas-val").innerText = gVal.toFixed(1);
             document.getElementById("current-interval").innerText = data.interval || 0;
 
+            // Status Logging
             const logStatus = document.getElementById("log-status");
             logStatus.innerText = (data.control || "STOP").toUpperCase();
             logStatus.className = data.control === "start" ? "badge bg-success" : "badge bg-danger";
 
-            const gVal = data.gas;
+            // Gas Analysis Logic (PPM Based)
             let gLabel = "Udara Bersih";
             let gStatus = "AMAN";
             let gClass = "bg-success";
 
-            if (gVal > 300 && gVal < 600) {
-                gLabel = "Terdeteksi Asap Ringan";
+            if (gVal > 150 && gVal < 300) {
+                gLabel = "Terdeteksi Asap / Gas Ringan";
                 gStatus = "WASPADA";
                 gClass = "bg-warning text-dark";
-            } else if (gVal >= 600) {
-                gLabel = "BOCOR: LPG / Gas Terdeteksi!";
+            } else if (gVal >= 300) {
+                gLabel = "BAHAYA: Kebocoran Gas Terdeteksi!";
                 gStatus = "BAHAYA";
                 gClass = "bg-danger";
             }
+            
             document.getElementById("gas-label").innerText = gLabel;
             document.getElementById("gas-status").innerText = gStatus;
             document.getElementById("gas-status").className = "status-badge " + gClass;
 
+            // Update Local Visuals
             const timeNow = new Date().toLocaleTimeString();
-            updateCharts(timeNow, data.suhu, data.kelembapan, data.gas);
-            updateTable(timeNow, data.suhu, data.kelembapan, data.gas);
+            updateCharts(timeNow, data.suhu, data.kelembapan, gVal);
+            updateTable(timeNow, data.suhu, data.kelembapan, gVal);
         }
     });
 
+    // 4. CHART UPDATE FUNCTION
     function updateCharts(time, t, h, g) {
         if (chartTH.data.labels.length > 10) {
             chartTH.data.labels.shift();
             chartTH.data.datasets[0].data.shift();
             chartTH.data.datasets[1].data.shift();
-            
             chartGas.data.labels.shift();
             chartGas.data.datasets[0].data.shift();
         }
-
         chartTH.data.labels.push(time);
         chartTH.data.datasets[0].data.push(t);
         chartTH.data.datasets[1].data.push(h);
@@ -204,47 +209,47 @@
         chartGas.update();
     }
 
+    // 5. TABLE UPDATE FUNCTION
     function updateTable(time, t, h, g) {
         const tbody = document.getElementById("tableBody");
         const row = `<tr>
             <td>${time}</td>
-            <td>${t}°C</td>
-            <td>${h}%</td>
-            <td>${g}</td>
+            <td>${t.toFixed(1)}°C</td>
+            <td>${h.toFixed(0)}%</td>
+            <td>${g.toFixed(1)}</td>
         </tr>`;
         tbody.insertAdjacentHTML('afterbegin', row);
         if (tbody.children.length > 10) tbody.removeChild(tbody.lastChild);
     }
 
-    // FUNGSI RESET LOKAL (YANG KAMU TANYAKAN)
+    // 6. RESET FUNCTION
     function resetLocalDashboard() {
-        // 1. Kosongkan Data Grafik Suhu/Hum
         chartTH.data.labels = [];
         chartTH.data.datasets[0].data = [];
         chartTH.data.datasets[1].data = [];
         chartTH.update();
 
-        // 2. Kosongkan Data Grafik Gas
         chartGas.data.labels = [];
         chartGas.data.datasets[0].data = [];
         chartGas.update();
 
-        // 3. Kosongkan Tabel Lokal
         document.getElementById("tableBody").innerHTML = "";
-
-        alert("Local Log & Grafik berhasil dibersihkan!");
+        alert("History Lokal telah dibersihkan!");
     }
 
+    // 7. CONTROL FUNCTIONS
     function updateControl(command) {
         db.ref("monitoring/control").set(command);
-        alert("Sistem diperintahkan: " + command.toUpperCase());
+        alert("Perintah dikirim: " + command.toUpperCase());
     }
 
     function setIntervalFirebase() {
         const val = document.getElementById("inputInterval").value;
-        if (val) {
+        if (val && val > 0) {
             db.ref("monitoring/interval").set(parseInt(val));
-            alert("Interval diubah ke: " + val + " detik");
+            alert("Interval diperbarui ke: " + val + " detik");
+        } else {
+            alert("Masukkan angka interval yang valid!");
         }
     }
 </script>
